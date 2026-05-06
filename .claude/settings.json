@@ -3,16 +3,23 @@
     "allow": [
       "Skill(type-checker-tests)",
       "WebSearch",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
       "Bash(cargo build:*)",
       "Bash(cargo check:*)",
       "Bash(cargo clippy:*)",
       "Bash(cargo fmt:*)",
+      "Bash(cargo metadata:*)",
       "Bash(cargo nextest run:*)",
+      "Bash(cargo run:*)",
       "Bash(cargo test:*)",
       "Bash(git log:*)",
       "Bash(git show:*)",
       "Bash(just integration:*)",
-      "Bash(just tc:*)"
+      "Bash(just t:*)",
+      "Bash(just fix:*)",
+      "Bash(just format-imports:*)",
+      "Bash(just --list:*)"
     ]
   }
 }

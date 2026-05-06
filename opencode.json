@@ -1,0 +1,34 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "*": "ask",
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "webfetch": "allow",
+    "websearch": "allow",
+    "skill": "allow",
+    "task": "allow",
+    "edit": "allow",
+    "bash": {
+      "*": "ask",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git show*": "allow",
+      "cargo metadata*": "allow",
+      "cargo build*": "allow",
+      "cargo check*": "allow",
+      "cargo clippy*": "allow",
+      "cargo fmt*": "allow",
+      "cargo nextest run*": "allow",
+      "cargo test*": "allow",
+      "cargo run*": "allow",
+      "just --list*": "allow",
+      "just t*": "allow",
+      "just integration*": "allow",
+      "just fix*": "allow",
+      "just format-imports*": "allow"
+    }
+  }
+}
