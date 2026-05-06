@@ -10,6 +10,7 @@
     "read": "allow",
     "glob": "allow",
     "grep": "allow",
+    "lsp": "allow",
     "webfetch": "allow",
     "websearch": "allow",
     "skill": "allow",
