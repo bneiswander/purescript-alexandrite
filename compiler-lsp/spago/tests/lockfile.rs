@@ -43,7 +43,19 @@ fn test_lockfile_sources_subdir_precedence_packages_over_workspace_extra_package
     assert!(
         sources
             .iter()
+            .any(|s| s == ".spago/p/foo/abcd/from-packages/test"),
+        "sources: {sources:?}"
+    );
+    assert!(
+        sources
+            .iter()
             .all(|s| s != ".spago/p/foo/abcd/from-workspace/src"),
+        "sources: {sources:?}"
+    );
+    assert!(
+        sources
+            .iter()
+            .all(|s| s != ".spago/p/foo/abcd/from-workspace/test"),
         "sources: {sources:?}"
     );
 }
@@ -79,7 +91,19 @@ fn test_lockfile_sources_subdir_fallback_to_workspace_extra_packages() {
     assert!(
         sources
             .iter()
+            .any(|s| s == ".spago/p/foo/abcd/from-workspace/test"),
+        "sources: {sources:?}"
+    );
+    assert!(
+        sources
+            .iter()
             .all(|s| s != ".spago/p/foo/abcd/from-packages/src"),
+        "sources: {sources:?}"
+    );
+    assert!(
+        sources
+            .iter()
+            .all(|s| s != ".spago/p/foo/abcd/from-packages/test"),
         "sources: {sources:?}"
     );
 }
