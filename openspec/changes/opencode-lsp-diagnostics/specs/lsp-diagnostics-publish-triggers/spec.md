@@ -17,6 +17,8 @@ The language server SHALL collect and publish diagnostics for a document upon `t
 ### Requirement: Diagnostics publication triggers SHALL be configurable via CLI flags
 The language server SHALL expose CLI flags to enable diagnostic publication on `didChange` (opt-in) and to configure whether diagnostics are published on `didOpen` and `didSave`.
 
+The language server SHALL advertise `textDocument/didSave` support via `ServerCapabilities.textDocumentSync` so that clients which honor capability negotiation will send `textDocument/didSave` notifications.
+
 #### Scenario: Diagnostics on change is opt-in
 - **WHEN** the server is started without an explicit `--diagnostics-on-change` flag
 - **THEN** the server SHALL NOT publish diagnostics in response to `textDocument/didChange`
@@ -28,3 +30,8 @@ The language server SHALL expose CLI flags to enable diagnostic publication on `
 #### Scenario: Diagnostics on open can be disabled
 - **WHEN** the server is started with `--diagnostics-on-open=false`
 - **THEN** the server SHALL NOT publish diagnostics in response to `textDocument/didOpen`
+
+#### Scenario: Clients send didSave when supported
+- **GIVEN** the server advertises `textDocumentSync.save`
+- **WHEN** the client saves an open document
+- **THEN** the client SHOULD send `textDocument/didSave` and the server can publish diagnostics (when `--diagnostics-on-save` is enabled)
