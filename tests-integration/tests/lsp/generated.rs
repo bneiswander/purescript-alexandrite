@@ -99,3 +99,5 @@ fn run_test(folder: &str, file: &str) {
 #[rustfmt::skip] #[test] fn test_043_hover_type_literal_main() { run_test("043_hover_type_literal", "Main"); }
 
 #[rustfmt::skip] #[test] fn test_044_hover_type_variable_main() { run_test("044_hover_type_variable", "Main"); }
+
+#[rustfmt::skip] #[test] fn test_045_document_symbols_main() { run_test("045_document_symbols", "Main"); }
