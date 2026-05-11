@@ -101,3 +101,11 @@ fn run_test(folder: &str, file: &str) {
 #[rustfmt::skip] #[test] fn test_044_hover_type_variable_main() { run_test("044_hover_type_variable", "Main"); }
 
 #[rustfmt::skip] #[test] fn test_045_document_symbols_main() { run_test("045_document_symbols", "Main"); }
+
+#[rustfmt::skip] #[test] fn test_046_document_highlight_local_main() { run_test("046_document_highlight_local", "Main"); }
+
+#[rustfmt::skip] #[test] fn test_047_document_highlight_cross_file_main() { run_test("047_document_highlight_cross_file", "Main"); }
+
+#[rustfmt::skip] #[test] fn test_048_document_highlight_locals_main() { run_test("048_document_highlight_locals", "Main"); }
+
+#[rustfmt::skip] #[test] fn test_049_document_highlight_top_level_main() { run_test("049_document_highlight_top_level", "Main"); }

@@ -6,8 +6,8 @@ use analyzer::completion::SuggestionsCache;
 use analyzer::{QueryEngine, prim};
 use async_lsp::lsp_types::{
     CompletionItemKind, CompletionList, CompletionResponse, DocumentSymbolResponse,
-    GotoDefinitionResponse, HoverContents, LanguageString, Location, MarkedString, Position,
-    SymbolInformation, Url,
+    DocumentHighlight, GotoDefinitionResponse, HoverContents, LanguageString, Location,
+    MarkedString, Position, SymbolInformation, Url,
 };
 use files::{FileId, Files};
 use itertools::Itertools;
@@ -23,11 +23,12 @@ enum CursorKind {
     Completion,
     CompletionCached,
     References,
+    DocumentHighlight,
     DocumentSymbols,
 }
 
 impl CursorKind {
-    const CHARACTERS: &[char] = &['@', '$', '^', '~', '%', '!'];
+    const CHARACTERS: &[char] = &['@', '$', '^', '~', '%', '&', '!'];
 
     fn parse(text: &str) -> Option<CursorKind> {
         match text {
@@ -36,6 +37,7 @@ impl CursorKind {
             "^" => Some(CursorKind::Completion),
             "~" => Some(CursorKind::CompletionCached),
             "%" => Some(CursorKind::References),
+            "&" => Some(CursorKind::DocumentHighlight),
             "!" => Some(CursorKind::DocumentSymbols),
             _ => None,
         }
@@ -269,6 +271,30 @@ fn dispatch_cursor(
             {
                 let location = location.into_iter().map(render_location).join("\n");
                 writeln!(result, "{location}").unwrap();
+            } else {
+                writeln!(result, "<empty>").unwrap();
+            }
+        }
+        CursorKind::DocumentHighlight => {
+            let render_highlight = |h: DocumentHighlight| -> String {
+                format!(
+                    "{}:{}..{}:{}",
+                    h.range.start.line,
+                    h.range.start.character,
+                    h.range.end.line,
+                    h.range.end.character
+                )
+            };
+
+            if let Ok(Some(highlights)) =
+                analyzer::document_highlight::implementation(engine, files, uri, position)
+            {
+                if highlights.is_empty() {
+                    writeln!(result, "<empty>").unwrap();
+                } else {
+                    let highlights = highlights.into_iter().map(render_highlight).join("\n");
+                    writeln!(result, "{highlights}").unwrap();
+                }
             } else {
                 writeln!(result, "<empty>").unwrap();
             }
