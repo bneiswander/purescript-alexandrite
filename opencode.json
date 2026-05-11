@@ -3,6 +3,10 @@
   "lsp": {
     "rust": {
       "command": ["rust-analyzer"]
+    },
+    "purescript": {
+      "command": ["./target/debug/purescript-analyzer", "--stdio", "--diagnostics-on-change"],
+      "extensions": [".purs"]
     }
   },
   "permission": {
