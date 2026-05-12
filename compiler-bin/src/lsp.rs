@@ -300,9 +300,9 @@ fn execute_command(
                     ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())
                 })
             }
-            PS_RESET => state.client.emit(event::Reset).map(|_| None).map_err(|e| {
-                ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())
-            }),
+            PS_RESET => event::reset(state, event::Reset)
+                .map(|_| None)
+                .map_err(|e| ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())),
             PS_CLEAN => state.client.emit(event::Clean).map(|_| None).map_err(|e| {
                 ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())
             }),
