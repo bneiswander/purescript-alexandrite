@@ -514,7 +514,7 @@ fn formatting(
         }
         if !stdout.is_empty() {
             if !details.is_empty() {
-                details.push_str("\n");
+                details.push('\n');
             }
             details.push_str(stdout);
         }
@@ -542,6 +542,7 @@ fn formatting(
 
     Ok(Some(vec![TextEdit { range, new_text: formatted }]))
 }
+
 fn did_change(state: &mut State, p: DidChangeTextDocumentParams) -> Result<(), LspError> {
     let uri = p.text_document.uri.as_str();
 
@@ -794,7 +795,6 @@ mod tests {
 
         event::analyzer_refresh(&mut state, event::AnalyzerRefresh).unwrap();
     }
-
     #[tokio::test]
     async fn formatting_capability_not_advertised_without_flag() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -888,7 +888,6 @@ mod tests {
         let err = res.unwrap_err();
         assert_eq!(err.code, async_lsp::ErrorCode::REQUEST_FAILED);
     }
-
     #[cfg(unix)]
     #[test]
     fn formatting_returns_full_document_edit() {
