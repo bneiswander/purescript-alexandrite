@@ -241,7 +241,10 @@ fn initialize(
         state.config.format_command.as_deref().is_some_and(|s| !s.trim().is_empty());
     async move {
         Ok(InitializeResult {
-            server_info: None,
+            server_info: Some(ServerInfo {
+                name: "purescript-analyzer".to_string(),
+                version: Some(env!("CARGO_PKG_VERSION").to_string()),
+            }),
             capabilities: ServerCapabilities {
                 execute_command_provider: Some(ExecuteCommandOptions {
                     commands: vec![
