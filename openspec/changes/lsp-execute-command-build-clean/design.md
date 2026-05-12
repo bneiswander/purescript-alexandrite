@@ -8,9 +8,9 @@ Constraints:
 
 - Only advertise commands we actually implement.
 - `purescript.build` must run a real build (spago or purs) and publish diagnostics derived from compiler JSON errors.
-- Build diagnostics should replace analyzer diagnostics (clear analyzer diagnostics for known files before publishing build results).
+- Build diagnostics should be tracked separately from analyzer diagnostics and merged for publication, suppressing stale duplicates by preferring build diagnostics at the same range.
 - `purescript.clean` must delete only the workspace `output/` directory.
-- Provide `purescript.reset` (clear all diagnostics and reset/reload analyzer state) and `purescript.analyzerRefresh` (manual workspace analyzer diagnostics run).
+- Provide `purescript.reset` (fast diagnostic/caches reset) and `purescript.analyzerRefresh` (manual analyzer diagnostics run for workspace source files).
 
 ## Goals / Non-Goals
 
@@ -19,7 +19,7 @@ Constraints:
 - Implement `workspace/executeCommand` request handling and advertise `executeCommandProvider`.
 - Implement the four commands: `purescript.build`, `purescript.clean`, `purescript.reset`, `purescript.analyzerRefresh`.
 - Support build tool selection for `purescript.build`: spago or purs (plus optional escape hatch command string if needed).
-- Publish build diagnostics by parsing JSON error output and mapping to `publishDiagnostics`.
+- Publish build diagnostics by parsing JSON error output and mapping to `publishDiagnostics`, without broadcasting empty diagnostics for every workspace file.
 - Keep existing automatic analyzer diagnostics triggers unchanged.
 
 **Non-Goals:**
@@ -42,47 +42,63 @@ Constraints:
 
 2. **Execution model**
    
-   Decision: Use the existing internal event pattern (`state.client.emit(...)` + `router.event_ext(...)`) for long-running work (build, reset, workspace refresh).
+   Decision: Use the existing internal event pattern (`state.client.emit(...)` + `router.event_ext(...)`) for long-running work (build, clean, workspace refresh). Keep `purescript.reset` inline in the execute-command handler so diagnostic clears happen immediately and deterministically for the request.
    
-   Rationale: Matches current architecture, runs work in `spawn_blocking`, and benefits from existing query cancellation behavior.
+   Rationale: Matches current architecture for blocking work, while reset is intentionally lightweight and benefits from direct access to current diagnostic/open-file state.
    
    Alternatives:
    
-   - Do work directly in the executeCommand handler. Rejected because it would block request handling and complicate cancellation.
+   - Do every command directly in the executeCommand handler. Rejected because build/clean/refresh can block request handling.
 
-3. **Diagnostics “source of truth” for build**
+3. **Diagnostics publication model**
    
-   Decision: For `purescript.build`, clear diagnostics for all known workspace files first, then publish build diagnostics parsed from compiler JSON errors. Do not attempt to merge with analyzer diagnostics.
+   Decision: Track build diagnostics and analyzer diagnostics separately. When publishing diagnostics for a URI, merge build diagnostics first, then analyzer diagnostics, suppressing analyzer diagnostics at ranges already covered by build diagnostics.
    
-   Rationale: Matches requested behavior (“build should replace any analyzer diagnostics”).
+   Rationale: Build output should not leave stale diagnostics behind, but analyzer diagnostics for distinct ranges remain useful. Separating sources also lets clean/reset remove only the relevant diagnostic source.
    
-   Trade-off: Analyzer diagnostics can reappear on subsequent `didOpen`/`didSave` triggers; that is acceptable given the requirement to keep default behavior unchanged.
+   Trade-off: After a build, users can still see analyzer diagnostics that do not overlap build diagnostics. This is intentional to preserve useful analyzer feedback while avoiding duplicate/stale diagnostics.
 
-4. **`purescript.clean` semantics**
+4. **Build publication scope**
+
+   Decision: On build, publish diagnostics only for files that previously had build diagnostics and files reported by the current build. Do not publish empty diagnostics for every known workspace file.
+
+   Rationale: Avoids flooding clients with large numbers of diagnostic notifications on large workspaces.
+
+   Trade-off: Analyzer diagnostics remain visible on files untouched by build output unless reset, clean, or a later per-file analyzer publication updates them.
+
+5. **`purescript.clean` semantics**
    
-   Decision: Delete only `<workspaceRoot>/output` recursively.
+   Decision: Delete only `<workspaceRoot>/output` recursively. Treat a missing output directory as success. Clear stored build diagnostics and republish merged diagnostics for files that previously had build diagnostics.
    
    Rationale: Explicit requirement and safest interpretation of “clean compiled output”.
    
    Safety: Validate the target path is exactly `root/output` (canonicalize/absolutize) and refuse otherwise.
 
-5. **`purescript.reset` semantics**
+6. **`purescript.reset` semantics**
    
-   Decision: Clear diagnostics for all known workspace files, reset analyzer state by recreating `QueryEngine` + `Files` (including `prim::configure`), then reload workspace source files using the same source discovery as initialization (`spago.lock` or `--source-command`).
+   Decision: Implement reset as a fast diagnostic reset. Cancel in-flight analyzer work, bump diagnostics generation to suppress stale background publications, clear stored build/analyzer diagnostics, publish empty diagnostics for known diagnostic URIs and currently open file URIs, and invalidate workspace-symbol/suggestion caches. Keep loaded file contents and do not rediscover/reload workspace source files.
    
-   Rationale: Provides a deterministic “back to clean slate” action that also clears build diagnostics.
+   Rationale: Provides a deterministic, low-latency way to clear stale diagnostics without triggering an expensive project reload on large workspaces. Users can explicitly recompute analyzer diagnostics with `purescript.analyzerRefresh` or run `purescript.build`.
 
-6. **Build tool support**
+   Trade-off: Reset does not pick up new/deleted source files by itself; that remains tied to initialization/source loading and later file events.
+
+7. **Analyzer refresh scope**
+
+   Decision: `purescript.analyzerRefresh` recomputes analyzer diagnostics only for refreshable workspace PureScript source files: `file://` `.purs` files under the workspace root, excluding `.spago`, `output`, `.git`, and `node_modules`. It clears stored analyzer diagnostics for non-refreshable file URIs while preserving any build diagnostics for those URIs.
+
+   Rationale: Manual refresh should cover user source/test files while avoiding dependency, generated, external, and non-file diagnostics that confuse clients or create noisy output.
+
+8. **Build tool support**
    
    Decision: Support spago and purs directly. Prefer spago by default when `spago.lock` is used to discover sources; otherwise use purs if configured.
    
-   Spago invocation: `spago build --purs-args "--json-errors"` (plus optional user args).
+   Spago invocation: `spago build --json-errors` (plus optional user args forwarded through `--purs-args`).
    
    Purs invocation: `purs compile --json-errors <workspace sources...>` (plus optional user args).
    
    Rationale: Mirrors common workflows. JSON errors are required to turn build output into file-scoped diagnostics.
 
-7. **Diagnostics parsing**
+9. **Diagnostics parsing**
    
    Decision: Implement a small JSON parser for PureScript compiler JSON errors (shared by both spago and purs). Convert to `lsp_types::Diagnostic` with `source = build/spago` or `build/purs`.
    
@@ -105,3 +121,7 @@ Constraints:
 - **File deletion safety**: `purescript.clean` deletes directories.
   
   Mitigation: Restrict deletion to `<root>/output` only after path validation. Treat missing output dir as success.
+
+- **Fast reset scope**: Reset no longer reloads workspace sources.
+  
+  Mitigation: Keep reset focused on diagnostics/caches. Use analyzer refresh or build for recomputation; rely on normal file events/source discovery for loaded file updates.
