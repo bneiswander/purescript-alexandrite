@@ -6,6 +6,7 @@ use async_lsp::ErrorCode;
 use spago::LockfileGlobSetError;
 use thiserror::Error;
 use tokio::task;
+use url::ParseError;
 
 #[derive(Error, Debug)]
 pub enum LspError {
@@ -27,8 +28,12 @@ pub enum LspError {
     JoinError(#[from] task::JoinError),
     #[error("Utf8Error: {0}")]
     Utf8Error(#[from] str::Utf8Error),
+    #[error("UrlParseError: {0}")]
+    UrlParseError(#[from] ParseError),
     #[error("Formatting failed: {0}")]
     FormattingFailed(String),
+    #[error("Unsupported execute command: {0}")]
+    UnsupportedCommand(String),
     #[error("GlobSetError: {0}")]
     GlobSetError(#[from] globset::Error),
     #[error("async_lsp::Error: {0}")]
@@ -49,6 +54,10 @@ impl LspError {
         if let Some(QueryError::Cancelled) = self.as_query_error() {
             return ErrorCode::REQUEST_CANCELLED;
         }
+
+        if matches!(self, LspError::UnsupportedCommand(_)) {
+            return ErrorCode::INVALID_PARAMS;
+        }
         ErrorCode::REQUEST_FAILED
     }
 
@@ -61,6 +70,7 @@ impl LspError {
         // can show useful feedback (e.g. formatter stderr).
         match self {
             LspError::FormattingFailed(message) => message,
+            LspError::UnsupportedCommand(message) => message,
             _ => "Request failed",
         }
     }
