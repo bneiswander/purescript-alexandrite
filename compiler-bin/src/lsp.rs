@@ -857,31 +857,27 @@ mod tests {
         }
     }
 
-    fn mk_tmp_dir(name: &str) -> std::path::PathBuf {
-        let mut dir = std::env::temp_dir();
-        dir.push(format!("purescript-analyzer-{name}-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
-        dir
-    }
-
     #[test]
-    fn reset_reloads_sources_from_source_command() {
-        let root = mk_tmp_dir("reset");
-        std::fs::create_dir_all(root.join("src")).unwrap();
-        std::fs::write(root.join("src/Main.purs"), "module Main where\n").unwrap();
+    fn reset_clears_diagnostics_but_keeps_files() {
+        let mut state = mk_state_with(base_config(None));
+        on_change(&mut state, "file:///test/Main.purs", "module Main where\n").unwrap();
 
-        let mut config = base_config(None);
-        config.source_command = Some("echo src/Main.purs".to_string());
-
-        let mut state = mk_state_with(config);
-        state.root = Some(root.clone());
+        // Seed both diagnostic sources.
+        let uri = Url::parse("file:///test/Main.purs").unwrap();
+        state
+            .build_diagnostics
+            .write()
+            .insert(uri.clone(), vec![Diagnostic::default()]);
+        state
+            .analyzer_diagnostics
+            .write()
+            .insert(uri.clone(), vec![Diagnostic::default()]);
 
         event::reset(&mut state, event::Reset).unwrap();
 
-        let files = state.files.read();
-        let uri = url::Url::from_file_path(root.join("src/Main.purs")).unwrap();
-        assert!(files.id(uri.as_str()).is_some());
+        assert!(state.build_diagnostics.read().is_empty());
+        assert!(state.analyzer_diagnostics.read().is_empty());
+        assert!(state.files.read().id(uri.as_str()).is_some());
     }
 
     #[tokio::test]
