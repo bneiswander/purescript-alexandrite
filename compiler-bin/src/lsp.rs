@@ -1,7 +1,7 @@
+pub mod build;
 pub mod error;
 pub mod event;
 pub mod extension;
-pub mod build;
 
 use std::borrow::BorrowMut;
 use std::ops::{ControlFlow, Deref};
@@ -180,33 +180,28 @@ fn execute_command(
 ) -> std::future::Ready<Result<<request::ExecuteCommand as Request>::Result, ResponseError>> {
     use std::future;
 
-    let res = match p.command.as_str() {
-        // Implemented in later tasks; for now dispatch to events.
-        PS_ANALYZER_REFRESH => state
-            .client
-            .emit(event::AnalyzerRefresh)
-            .map(|_| None)
-            .map_err(|e| ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())),
-        PS_RESET => state
-            .client
-            .emit(event::Reset)
-            .map(|_| None)
-            .map_err(|e| ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())),
-        PS_CLEAN => state
-            .client
-            .emit(event::Clean)
-            .map(|_| None)
-            .map_err(|e| ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())),
-        PS_BUILD => state
-            .client
-            .emit(build::Build)
-            .map(|_| None)
-            .map_err(|e| ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())),
-        other => Err(ResponseError::new(
-            async_lsp::ErrorCode::INVALID_PARAMS,
-            format!("unsupported command: {other}"),
-        )),
-    };
+    let res =
+        match p.command.as_str() {
+            // Implemented in later tasks; for now dispatch to events.
+            PS_ANALYZER_REFRESH => {
+                state.client.emit(event::AnalyzerRefresh).map(|_| None).map_err(|e| {
+                    ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())
+                })
+            }
+            PS_RESET => state.client.emit(event::Reset).map(|_| None).map_err(|e| {
+                ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())
+            }),
+            PS_CLEAN => state.client.emit(event::Clean).map(|_| None).map_err(|e| {
+                ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())
+            }),
+            PS_BUILD => state.client.emit(build::Build).map(|_| None).map_err(|e| {
+                ResponseError::new(async_lsp::ErrorCode::REQUEST_FAILED, e.to_string())
+            }),
+            other => Err(ResponseError::new(
+                async_lsp::ErrorCode::INVALID_PARAMS,
+                format!("unsupported command: {other}"),
+            )),
+        };
 
     future::ready(res)
 }
@@ -547,7 +542,6 @@ fn formatting(
 
     Ok(Some(vec![TextEdit { range, new_text: formatted }]))
 }
-
 fn did_change(state: &mut State, p: DidChangeTextDocumentParams) -> Result<(), LspError> {
     let uri = p.text_document.uri.as_str();
 
@@ -720,8 +714,8 @@ mod tests {
     use super::*;
 
     use async_lsp::lsp_types::{
-        ClientCapabilities, DocumentFormattingParams, ExecuteCommandParams, InitializeParams, Position,
-        TextDocumentIdentifier, Url, WorkspaceFolder,
+        ClientCapabilities, DocumentFormattingParams, ExecuteCommandParams, InitializeParams,
+        Position, TextDocumentIdentifier, Url, WorkspaceFolder,
     };
 
     fn mk_state_with(config: cli::Config) -> State {

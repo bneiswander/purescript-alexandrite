@@ -12,8 +12,8 @@ use walkdir::WalkDir;
 use once_cell::sync::Lazy;
 
 use crate::cli;
-use crate::lsp::error::LspError;
 use crate::lsp::StateSnapshot;
+use crate::lsp::error::LspError;
 
 pub struct Build;
 
@@ -30,10 +30,7 @@ fn build_core(mut snapshot: StateSnapshot) -> Result<(), LspError> {
 
     let known_uris: Vec<Url> = {
         let files = snapshot.files.read();
-        files
-            .iter_id()
-            .map(|id| Url::parse(files.path(id).as_ref()))
-            .collect::<Result<Vec<_>, _>>()
+        files.iter_id().map(|id| Url::parse(files.path(id).as_ref())).collect::<Result<Vec<_>, _>>()
     }?;
 
     let tool = match snapshot.config.build_tool {
@@ -56,7 +53,11 @@ fn build_core(mut snapshot: StateSnapshot) -> Result<(), LspError> {
 
     let stderr = String::from_utf8_lossy(&output.stderr);
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let json_text = if stderr.contains('{') || stderr.contains('[') { stderr.as_ref() } else { stdout.as_ref() };
+    let json_text = if stderr.contains('{') || stderr.contains('[') {
+        stderr.as_ref()
+    } else {
+        stdout.as_ref()
+    };
 
     let diagnostics_by_uri = parse_purs_json_errors(json_text, tool);
     let build_map = match &diagnostics_by_uri {
@@ -227,11 +228,9 @@ fn extend_from_value(
 ) -> Result<(), LspError> {
     let errors: Vec<Value> = match value {
         Value::Array(arr) => arr,
-        Value::Object(obj) => obj
-            .get("errors")
-            .and_then(|v| v.as_array())
-            .cloned()
-            .unwrap_or_default(),
+        Value::Object(obj) => {
+            obj.get("errors").and_then(|v| v.as_array()).cloned().unwrap_or_default()
+        }
         _ => vec![],
     };
 
@@ -240,9 +239,8 @@ fn extend_from_value(
         let uri = if filename.starts_with("file://") {
             Url::parse(filename)?
         } else {
-            Url::from_file_path(filename).map_err(|_| {
-                LspError::PathParseFail(PathBuf::from(filename))
-            })?
+            Url::from_file_path(filename)
+                .map_err(|_| LspError::PathParseFail(PathBuf::from(filename)))?
         };
 
         let diagnostic = error_to_diagnostic(&err, tool);
@@ -254,10 +252,8 @@ fn extend_from_value(
 
 fn error_to_diagnostic(err: &Value, tool: cli::BuildTool) -> Diagnostic {
     let message = extract_message(err);
-    let range = extract_range(err).unwrap_or(Range {
-        start: Position::new(0, 0),
-        end: Position::new(0, 0),
-    });
+    let range = extract_range(err)
+        .unwrap_or(Range { start: Position::new(0, 0), end: Position::new(0, 0) });
 
     let source = match tool {
         cli::BuildTool::Spago => "build/spago",
@@ -287,11 +283,8 @@ fn extract_message(err: &Value) -> String {
     if let Some(arr) = err.get("message").and_then(|v| v.as_array()) {
         let mut out = String::new();
         for part in arr {
-            let s = part
-                .get("text")
-                .and_then(|v| v.as_str())
-                .or_else(|| part.as_str())
-                .unwrap_or("");
+            let s =
+                part.get("text").and_then(|v| v.as_str()).or_else(|| part.as_str()).unwrap_or("");
             out.push_str(s);
         }
         if !out.is_empty() {
@@ -312,8 +305,10 @@ fn extract_range(err: &Value) -> Option<Range> {
     let end_col = obj.get("endColumn")?.as_u64()?;
 
     // purs positions are 1-based.
-    let start = Position::new((start_line.saturating_sub(1)) as u32, (start_col.saturating_sub(1)) as u32);
-    let end = Position::new((end_line.saturating_sub(1)) as u32, (end_col.saturating_sub(1)) as u32);
+    let start =
+        Position::new((start_line.saturating_sub(1)) as u32, (start_col.saturating_sub(1)) as u32);
+    let end =
+        Position::new((end_line.saturating_sub(1)) as u32, (end_col.saturating_sub(1)) as u32);
     Some(Range { start, end })
 }
 

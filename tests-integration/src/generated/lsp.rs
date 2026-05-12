@@ -5,8 +5,8 @@ use std::fmt::Write;
 use analyzer::completion::SuggestionsCache;
 use analyzer::{QueryEngine, prim};
 use async_lsp::lsp_types::{
-    CompletionItemKind, CompletionList, CompletionResponse, DocumentSymbolResponse,
-    DocumentHighlight, GotoDefinitionResponse, HoverContents, LanguageString, Location,
+    CompletionItemKind, CompletionList, CompletionResponse, DocumentHighlight,
+    DocumentSymbolResponse, GotoDefinitionResponse, HoverContents, LanguageString, Location,
     MarkedString, Position, SymbolInformation, Url,
 };
 use files::{FileId, Files};
