@@ -14,3 +14,18 @@ The analyzer SHALL match an open row pattern with a rigid variable tail (from `f
 #### Scenario: Unification variable tails still defer via Stuck
 - **WHEN** an instance has head `Class { | r }` where `r` is an unification variable (not a rigid variable)
 - **THEN** the analyzer MUST return `Stuck` (not `Apart`) to defer the match until the unification variable is solved
+
+### Requirement: Compiler row constraints defer to instance matching for rigid variables
+The analyzer SHALL defer `Row.Cons` and `RowToList` compiler constraints to instance matching when their arguments are rigid variables. This allows instance matching to bind the rigid variables to concrete row types first.
+
+#### Scenario: Row.Cons with rigid row argument defers
+- **WHEN** a `Row.Cons` constraint has a rigid variable as the row argument
+- **THEN** the constraint solver MUST return `None` from the compiler constraint handler, allowing instance matching to bind the rigid variable
+
+#### Scenario: RowToList with rigid row argument defers
+- **WHEN** a `RowToList` constraint has a rigid variable as the row argument
+- **THEN** the constraint solver MUST return `None` from the compiler constraint handler, allowing instance matching to bind the rigid variable
+
+#### Scenario: RowToList with rigid tail variable defers
+- **WHEN** a `RowToList` constraint has a row with a rigid variable tail
+- **THEN** the constraint solver MUST return `None` from the compiler constraint handler, allowing instance matching to bind the rigid variable
