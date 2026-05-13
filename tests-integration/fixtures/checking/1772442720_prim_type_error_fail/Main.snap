@@ -1,5 +1,5 @@
 ---
-source: tests-integration/tests/checking/generated.rs
+source: target/debug/build/tests-integration-35f6ccefceed9daa/out/checking_generated.rs
 assertion_line: 28
 expression: report
 ---
@@ -22,6 +22,11 @@ Roles
 Proxy = [Phantom]
 
 Diagnostics
+error[CustomFailure]: This operation is not allowed
+  --> 8:1..8:77
+  |
+8 | failBasic :: forall a. Fail (Text "This operation is not allowed") => a -> a
+  | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 error[CustomFailure]: This operation is not allowed
   --> 11:1..11:20
    |

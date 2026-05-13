@@ -1,5 +1,5 @@
 ---
-source: tests-integration/tests/checking/generated.rs
+source: target/debug/build/tests-integration-35f6ccefceed9daa/out/checking_generated.rs
 assertion_line: 28
 expression: report
 ---
@@ -30,3 +30,10 @@ instance forall (t7 :: Type -> Type). Convert ((t7 :: Type -> Type) Unit) (t7 ::
 Roles
 Unit = []
 Spec = [Phantom]
+
+Diagnostics
+error[NoInstanceFound]: No instance found for: Convert (Int -> ?22 Unit) Aff
+  --> 24:1..24:18
+   |
+24 | test2 :: Spec Aff
+   | ^~~~~~~~~~~~~~~~~
