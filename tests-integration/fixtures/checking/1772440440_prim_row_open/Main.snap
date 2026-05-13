@@ -58,12 +58,12 @@ forceSolve ::
 Types
 
 Diagnostics
-error[AmbiguousConstraint]: Ambiguous constraint: Lacks @Type "a" ( a :: Int | ?114 )
+error[AmbiguousConstraint]: Ambiguous constraint: Lacks @Type "a" ( a :: Int | ?115 )
   --> 33:1..43:4
    |
 33 | forceSolve =
    | ^~~~~~~~~~~~
-error[AmbiguousConstraint]: Ambiguous constraint: Lacks @Type "missing" ?111
+error[AmbiguousConstraint]: Ambiguous constraint: Lacks @Type "missing" ?112
   --> 33:1..43:4
    |
 33 | forceSolve =
