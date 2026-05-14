@@ -7,6 +7,10 @@ When checking a term operator chain against a simple expected result type, the t
 - **WHEN** a term operator chain using flipped application is checked against an expected type and the flipped function operand contains polymorphic natural-transformation-shaped types whose result is determined by the chain result
 - **THEN** the checker MUST propagate the expected result type before checking the flipped function operand and MUST NOT emit a false `CannotUnify` between `Run` and `Function` shapes.
 
+#### Scenario: Inline lambda callback with nested operator chain
+- **WHEN** a lambda expression is checked against an expected natural-transformation-shaped type and its body contains a term operator chain using the lambda argument
+- **THEN** the checker MUST check the lambda body against the skolemised signature result type and MUST NOT check the nested operator chain against the full `forall` function type.
+
 #### Scenario: Invalid operator chain remains rejected
 - **WHEN** a term operator chain is checked against an expected type that is incompatible with the operator branch result
 - **THEN** the checker MUST still report the type mismatch.
