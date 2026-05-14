@@ -66,6 +66,17 @@ The analyzer SHALL type check record-folding code where a fold updates type-leve
 - **WHEN** a record contains both `attachments: Proxy True` and `includeDocs: Proxy True`, and folding updates `CA NoDoc NoKeys` through `PickMax (Doc Base64) (Doc Stub)`
 - **THEN** the analyzer MUST infer the maximum document kind without emitting `Compare 2 1 LT`
 
+### Requirement: Operator applications elaborate constrained monadic results
+The analyzer SHALL check operator applications consistently with equivalent direct function applications when the operator result comes from a constrained polymorphic function. Expected result guidance MUST NOT cause a constrained result such as `MonadEffect m => m a` to be unified directly with a concrete monad type before wanted constraints can be elaborated and solved.
+
+#### Scenario: Dollar application solves Run MonadEffect wanted
+- **WHEN** a definition with signature `Run (EFFECT r) Env` uses `$` to apply a function of type `forall a m. a -> MonadEffect m => m (Env a)` to an argument
+- **THEN** the analyzer MUST solve the wanted `MonadEffect (Run (EFFECT r))` through the available `Run` instance and MUST NOT emit `CannotUnify` between the constrained monadic result and `Run (EFFECT r) Env`
+
+#### Scenario: Direct and operator applications agree
+- **WHEN** the same constrained polymorphic function call is written once with direct application and once with `$`
+- **THEN** the analyzer MUST accept both forms or reject both forms for the same semantic reason, rather than accepting the direct form while reporting a unification diagnostic only for the operator form
+
 ### Requirement: Compiler Reflectable solver only returns Apart for provable incompatibility
 The analyzer SHALL NOT return `Apart` from the compiler's built-in `Reflectable` literal solver when the solver simply does not apply to the given arguments. The solver SHALL only return `Apart` when it can conclusively prove incompatibility between a literal value and an incompatible type target.
 
