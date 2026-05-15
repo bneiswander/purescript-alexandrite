@@ -11,7 +11,7 @@ The analyzer MUST terminate recursive candidate-probe calls in `candidate_constr
 - **WHEN** an instance chain has non-recursive candidates whose subgoals do not re-enter the same chain
 - **THEN** the analyzer MUST fully probe all candidates without triggering the depth guard
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Candidate-unsatisfiability probes use structural key matching
 The analyzer MUST use structural `ProbeKey` matching (independent of canonical IDs) to detect equivalent constraint sets across recursive candidate probes. This allows the depth guard to identify recursive probes even when canonical IDs differ between probe instances.
@@ -27,7 +27,7 @@ The analyzer MUST cache successful probe results keyed by structural `ProbeKey` 
 - **WHEN** `candidate_constraints_are_unsatisfiable` is called with constraints that structurally match a previously cached probe result
 - **THEN** the analyzer MUST return the cached result without re-solving the constraints
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Inferred hover returns checked types for uncovered nodes
 The analyzer MUST return the checked type from `engine.checked(current_file)` for hover nodes not covered by fast paths (constructors, variables, operators, literals). This applies to local binders, let bindings, inferred expressions, inferred types, and puns.

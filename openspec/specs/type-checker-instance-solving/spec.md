@@ -1,5 +1,7 @@
-## ADDED Requirements
+## Purpose
 
+Define instance-chain solving behavior for compiler constraints, candidate rejection, and recursive probes.
+## Requirements
 ### Requirement: Rigid variables in instance row patterns match any row
 The analyzer SHALL match an open row pattern with a rigid variable tail (from `freshen_instance_signature`) against any given row type, including closed rows. Rigid variables in instance `matchable` types act as pattern variables and must not be treated as `Apart`.
 
@@ -87,3 +89,15 @@ The analyzer SHALL NOT return `Apart` from the compiler's built-in `Reflectable`
 #### Scenario: Reflectable with literal and mismatched type still reports Apart
 - **WHEN** a `Reflectable` constraint has a literal first argument (e.g., a symbol `"hello"`) and a type second argument that is provably incompatible (e.g., `Int`)
 - **THEN** the analyzer MUST return `Apart` from the compiler literal solver, correctly rejecting all candidates
+
+### Requirement: Inferred hover returns checked types for uncovered nodes
+The analyzer MUST return the checked type from `engine.checked(current_file)` for hover nodes not covered by fast paths (constructors, variables, operators, literals). This applies to local binders, let bindings, inferred expressions, inferred types, and puns.
+
+#### Scenario: Hover on let binding shows inferred type
+- **WHEN** the user hovers over a let-bound identifier whose type is inferred
+- **THEN** the analyzer MUST render the checked type using `Pretty` (not return `None` or syntax only)
+
+#### Scenario: Hover on inferred expression shows checked type
+- **WHEN** the user hovers over an expression whose kind does not match a fast path
+- **THEN** the analyzer MUST render the checked type from the checked module
+

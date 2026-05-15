@@ -1,9 +1,7 @@
 ## Purpose
 
 Define the language server `workspace/executeCommand` capabilities and command behavior.
-
 ## Requirements
-
 ### Requirement: ExecuteCommand Provider Is Advertised
 The language server SHALL advertise an `executeCommandProvider` capability containing exactly the commands it implements.
 
@@ -44,12 +42,17 @@ The language server SHALL implement `purescript.reset` as a fast reset that clea
 - **AND** keeps currently loaded file contents instead of rediscovering workspace source files
 
 ### Requirement: Analyzer Refresh Publishes Source File Diagnostics
-The language server SHALL implement `purescript.analyzerRefresh` by publishing analyzer diagnostics for refreshable workspace PureScript source files.
+The language server SHALL implement `purescript.analyzerRefresh` by scheduling progressive analyzer diagnostics for refreshable workspace PureScript source files.
 
 #### Scenario: Manual analyzer refresh
 - **WHEN** the client executes `purescript.analyzerRefresh`
-- **THEN** the server computes and publishes analyzer diagnostics for `file://` `.purs` files under the workspace root
+- **THEN** the server computes analyzer diagnostics for `file://` `.purs` files under the workspace root
 - **AND** excludes dependency, generated, external, and non-file URIs such as `.spago`, `output`, `.git`, `node_modules`, and `prim://` files
+
+#### Scenario: Manual analyzer refresh publishes progressively
+- **WHEN** the client executes `purescript.analyzerRefresh`
+- **THEN** the server SHALL NOT require all refreshable workspace files to finish diagnostic computation before publishing the first changed diagnostic result
+- **AND** the server SHALL avoid publishing diagnostics for files whose merged diagnostics have not changed
 
 ### Requirement: Build Runs External Tool And Publishes Build Diagnostics
 The language server SHALL implement `purescript.build` by invoking an external build tool (`spago` or `purs`) configured for the workspace and publishing diagnostics derived from compiler JSON errors.
@@ -78,3 +81,4 @@ The language server SHALL NOT change its existing automatic diagnostics triggers
 #### Scenario: Diagnostics trigger defaults remain
 - **WHEN** the server is started with default configuration
 - **THEN** diagnostics are published on open and save, and are not published on change unless explicitly enabled
+
