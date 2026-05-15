@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Define how the type checker handles compiler `Reflectable` solving when user-defined recursive instances may apply.
+
+## Requirements
 
 ### Requirement: Non-literal Reflectable arguments defer to user-defined instances
 The constraint solver SHALL NOT return `Apart` for a `Reflectable` constraint when the first argument is a non-literal type constructor that is not a unification variable. Instead, the solver SHALL return `None` (no compiler solver applies), allowing normal instance chain search to find user-defined `Reflectable` instances.

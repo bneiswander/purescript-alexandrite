@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Define row functional-dependency diagnostics and kind preservation for row constraint solving.
+
+## Requirements
 
 ### Requirement: Determined row variables do not cause false unification errors
 The analyzer SHALL accept programs where an explicit signature quantifies a row variable that is determined by an in-scope functional-dependency constraint, and the checked expression requires a concrete row shape consistent with that constraint.

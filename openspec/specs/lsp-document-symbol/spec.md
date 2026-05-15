@@ -1,3 +1,7 @@
+## Purpose
+
+Define document symbol support for PureScript source documents in the language server.
+
 ## Requirements
 
 ### Requirement: Provide document symbols

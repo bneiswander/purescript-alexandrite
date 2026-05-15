@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Define source discovery for Spago lockfile extra packages that are stored in repository subdirectories.
+
+## Requirements
 
 ### Requirement: Lockfile extra package subdir sources are discoverable
 When a Spago project uses an extra package with `subdir` (configured via `spago.yaml` `workspace.extraPackages.<package>.subdir`), the LSP lockfile integration SHALL use `spago.lock` to discover sources under that subdir.
